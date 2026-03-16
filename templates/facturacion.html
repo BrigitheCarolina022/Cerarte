@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% set page = 'facturacion' %}
+{% block content %}
+<div class="p-6">
+  <h1 class="text-3xl font-bold text-amber-800 mb-6">🧾 Nueva Factura</h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Formulario izquierdo -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Datos de Facturación</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Facturado por:</label>
+          <input id="facturador" type="text" placeholder="Nombre del facturador"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cliente:</label>
+          <input id="cliente" type="text" placeholder="Nombre del cliente o empresa"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="esEmpresa" onchange="recalcular()" class="w-4 h-4 text-amber-600">
+          <label for="esEmpresa" class="text-sm font-medium text-gray-700">¿Es empresa? (Descuento 5%)</label>
+        </div>
+      </div>
+
+      <h3 class="text-lg font-bold text-gray-800 mt-6 mb-2">Productos Disponibles</h3>
+
+      <!-- Buscador -->
+      <div class="relative mb-3">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input id="buscador-prod" type="text" oninput="filtrarProductos()"
+          placeholder="Buscar producto..."
+          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+      </div>
+
+      <div id="lista-productos" class="max-h-96 overflow-y-auto space-y-4">
+        {% for cat in categorias %}
+        {% set cat_prods = productos | selectattr('categoria', 'equalto', cat) | list %}
+        {% if cat_prods %}
+        <div class="cat-grupo">
+          <h4 class="cat-titulo text-sm font-bold text-amber-700 mb-2 flex items-center gap-2 bg-amber-50 px-3 py-2 rounded-lg">
+            {% if cat == 'Alcancías' %}🐷{% elif cat == 'Materas' %}🪴{% else %}✨{% endif %} {{ cat.upper() }}
+          </h4>
+          <div class="space-y-2">
+            {% for p in cat_prods %}
+            <div class="prod-item flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-amber-50 transition ml-2"
+                 data-nombre="{{ p.nombre | lower }}">
+              <div>
+                <p class="font-semibold text-gray-800">{{ p.nombre }}</p>
+                <p class="text-sm text-gray-600">Stock: {{ p.stock }} | ${{ "{:,.0f}".format(p.precio) }}</p>
+              </div>
+              <button onclick="agregarItem({{ p.id }}, '{{ p.nombre }}', {{ p.precio }}, {{ p.stock }})"
+                class="bg-amber-600 text-white px-3 py-1 rounded hover:bg-amber-700 transition">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <!-- Mensaje sin resultados -->
+        <p id="sin-resultados" class="hidden text-center text-gray-400 text-sm py-4">No se encontraron productos</p>
+      </div>
+    </div>
+
+    <!-- Resumen derecho -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Resumen de Factura</h2>
+      <div id="resumen-vacio" class="text-gray-500 text-center py-8">No hay productos agregados</div>
+      <div id="resumen-items" class="hidden">
+        <div id="items-lista" class="space-y-3 mb-4 max-h-72 overflow-y-auto"></div>
+        <div class="border-t pt-4 space-y-2">
+          <div class="flex justify-between text-gray-700">
+            <span>Subtotal:</span>
+            <span id="txt-subtotal" class="font-semibold">$0</span>
+          </div>
+          <div id="row-descuento" class="flex justify-between text-green-700 hidden">
+            <span>Descuento 5%:</span>
+            <span id="txt-descuento" class="font-semibold">-$0</span>
+          </div>
+          <div class="flex justify-between text-xl font-bold text-amber-800 pt-2 border-t">
+            <span>TOTAL:</span>
+            <span id="txt-total">$0</span>
+          </div>
+        </div>
+
+        <!-- Botones: Generar y Descargar -->
+        <button onclick="generarFactura()"
+          class="w-full mt-4 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-check-circle"></i> Generar Factura
+        </button>
+
+        <!-- Botón de descarga (aparece solo después de generar) -->
+        <a id="btn-descargar" href="#" target="_blank"
+          class="hidden w-full mt-3 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let items = {};
+
+function filtrarProductos(){
+  const q = document.getElementById('buscador-prod').value.toLowerCase().trim();
+  const grupos = document.querySelectorAll('.cat-grupo');
+  let totalVisibles = 0;
+
+  grupos.forEach(grupo => {
+    const items_prod = grupo.querySelectorAll('.prod-item');
+    let visiblesEnGrupo = 0;
+    items_prod.forEach(item => {
+      const nombre = item.dataset.nombre || '';
+      const mostrar = !q || nombre.includes(q);
+      item.style.display = mostrar ? '' : 'none';
+      if(mostrar) visiblesEnGrupo++;
+    });
+    // Ocultar el encabezado de categoría si ningún producto coincide
+    grupo.style.display = visiblesEnGrupo > 0 ? '' : 'none';
+    totalVisibles += visiblesEnGrupo;
+  });
+
+  document.getElementById('sin-resultados').classList.toggle('hidden', totalVisibles > 0);
+}
+
+function agregarItem(id, nombre, precio, maxStock){
+  if(items[id]){
+    if(items[id].cantidad >= maxStock){ toast('Stock insuficiente', false); return; }
+    items[id].cantidad++;
+  } else {
+    items[id] = { id, nombre, precio, cantidad: 1, maxStock };
+  }
+  renderItems();
+}
+
+function cambiarCantidad(id, val){
+  val = parseInt(val);
+  if(val <= 0){ delete items[id]; }
+  else if(val > items[id].maxStock){ toast('Stock insuficiente', false); return; }
+  else { items[id].cantidad = val; }
+  renderItems();
+}
+
+function renderItems(){
+  const lista = document.getElementById('items-lista');
+  lista.innerHTML = '';
+  const ids = Object.keys(items);
+
+  if(ids.length === 0){
+    document.getElementById('resumen-vacio').classList.remove('hidden');
+    document.getElementById('resumen-items').classList.add('hidden');
+    // Ocultar botón de descarga si se vacía la lista
+    document.getElementById('btn-descargar').classList.add('hidden');
+    return;
+  }
+  document.getElementById('resumen-vacio').classList.add('hidden');
+  document.getElementById('resumen-items').classList.remove('hidden');
+
+  ids.forEach(id => {
+    const it = items[id];
+    lista.innerHTML += `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+        <div class="flex-1">
+          <p class="font-semibold text-gray-800">${it.nombre}</p>
+          <p class="text-sm text-gray-600">$${it.precio.toLocaleString()} × ${it.cantidad}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" min="1" value="${it.cantidad}" onchange="cambiarCantidad(${id}, this.value)"
+            class="w-16 border border-gray-300 rounded px-2 py-1 text-center">
+          <button onclick="cambiarCantidad(${id}, 0)" class="text-red-600 hover:text-red-800">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>`;
+  });
+  recalcular();
+}
+
+function recalcular(){
+  const esEmpresa = document.getElementById('esEmpresa').checked;
+  let subtotal = Object.values(items).reduce((s, it) => s + it.precio * it.cantidad, 0);
+  let descuento = esEmpresa ? subtotal * 0.05 : 0;
+  let total = subtotal - descuento;
+  document.getElementById('txt-subtotal').textContent = '$' + subtotal.toLocaleString();
+  document.getElementById('txt-descuento').textContent = '-$' + descuento.toLocaleString();
+  document.getElementById('txt-total').textContent = '$' + total.toLocaleString();
+  document.getElementById('row-descuento').classList.toggle('hidden', !esEmpresa);
+}
+
+async function generarFactura(){
+  const facturador = document.getElementById('facturador').value.trim();
+  const cliente    = document.getElementById('cliente').value.trim();
+  const esEmpresa  = document.getElementById('esEmpresa').checked;
+
+  if(!facturador || !cliente){ toast('Complete nombre del facturador y cliente', false); return; }
+  if(Object.keys(items).length === 0){ toast('Agregue al menos un producto', false); return; }
+
+  const payload = {
+    facturador, cliente, es_empresa: esEmpresa,
+    items: Object.values(items).map(it => ({id: it.id, nombre: it.nombre, precio: it.precio, cantidad: it.cantidad}))
+  };
+
+  const res  = await fetch('/api/facturas', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  const json = await res.json();
+
+  if(json.ok){
+    toast(`✅ Factura #${json.numero} generada — Total: $${json.total.toLocaleString()}`);
+
+    // Mostrar botón de descarga con el ID real de la factura
+    const btnDesc = document.getElementById('btn-descargar');
+    btnDesc.href = `/factura/${json.id}/pdf`;
+    btnDesc.classList.remove('hidden');
+
+    // Limpiar formulario
+    items = {};
+    document.getElementById('facturador').value = '';
+    document.getElementById('cliente').value    = '';
+    document.getElementById('esEmpresa').checked = false;
+    renderItems();
+
+    // Mostrar el botón de descarga aunque la lista esté vacía
+    document.getElementById('resumen-items').classList.remove('hidden');
+    document.getElementById('resumen-vacio').classList.add('hidden');
+  } else {
+    toast('Error al generar factura', false);
+  }
+}
+</script>
+{% endblock %}
