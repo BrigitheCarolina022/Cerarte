@@ -53,6 +53,8 @@ def generar_pdf_factura(factura, items):
     story.append(Spacer(1, 0.3*cm))
     story.append(P("FACTURA DE VENTA", titulo_s))
     story.append(Spacer(1, 0.15*cm))
+    story.append(Spacer(1, 0.15*cm))
+    story.append(Spacer(1, 0.15*cm))
     story.append(HRFlowable(width="100%", thickness=3, color=AMBER, spaceAfter=0.5*cm))
 
     tipo_txt = "Empresa" if factura['es_empresa'] else "Cliente"
