@@ -3,10 +3,8 @@
 {% block content %}
 <div class="p-6">
   <h1 class="text-3xl font-bold text-amber-800 mb-6">📊 Reportes y Estadísticas</h1>
-
   <div class="bg-white p-6 rounded-lg shadow-md">
     <h2 class="text-xl font-bold text-gray-800 mb-4">📄 Historial de Facturas</h2>
-
     {% if facturas %}
     <div class="overflow-x-auto">
       <table class="w-full">
@@ -20,7 +18,7 @@
             <th class="px-4 py-3 text-right">Subtotal</th>
             <th class="px-4 py-3 text-right">Descuento</th>
             <th class="px-4 py-3 text-right">Total</th>
-            <th class="px-4 py-3 text-center">Descargar</th>
+            <th class="px-4 py-3 text-center">PDF</th>
           </tr>
         </thead>
         <tbody>
@@ -31,20 +29,15 @@
             <td class="px-4 py-3 font-semibold text-gray-800">{{ f.cliente }}</td>
             <td class="px-4 py-3 text-gray-600">{{ f.fecha }}</td>
             <td class="px-4 py-3">
-              <span class="px-2 py-1 rounded-full text-xs font-semibold
-                {{ 'bg-blue-200 text-blue-800' if f.es_empresa else 'bg-green-200 text-green-800' }}">
+              <span class="px-2 py-1 rounded-full text-xs font-semibold {{ 'bg-blue-200 text-blue-800' if f.es_empresa else 'bg-green-200 text-green-800' }}">
                 {{ 'Empresa' if f.es_empresa else 'Cliente' }}
               </span>
             </td>
             <td class="px-4 py-3 text-right text-gray-700">${{ "{:,.0f}".format(f.subtotal) }}</td>
-            <td class="px-4 py-3 text-right text-green-700">
-              {% if f.descuento > 0 %}-${{ "{:,.0f}".format(f.descuento) }}{% else %}—{% endif %}
-            </td>
+            <td class="px-4 py-3 text-right text-green-700">{% if f.descuento > 0 %}-${{ "{:,.0f}".format(f.descuento) }}{% else %}—{% endif %}</td>
             <td class="px-4 py-3 text-right text-amber-700 font-bold">${{ "{:,.0f}".format(f.total) }}</td>
             <td class="px-4 py-3 text-center">
-              <a href="/factura/{{ f.id }}/pdf"
-                 class="inline-flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition shadow-sm"
-                 title="Descargar PDF">
+              <a href="/factura/{{ f.id }}/pdf" class="inline-flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-file-pdf"></i> PDF
               </a>
             </td>
@@ -54,9 +47,7 @@
         <tfoot class="bg-amber-50 border-t-2 border-amber-300">
           <tr>
             <td colspan="8" class="px-4 py-3 text-right font-bold text-amber-800">TOTAL GENERAL:</td>
-            <td class="px-4 py-3 text-right font-bold text-amber-900 text-lg">
-              ${{ "{:,.0f}".format(facturas | sum(attribute='total')) }}
-            </td>
+            <td class="px-4 py-3 text-right font-bold text-amber-900 text-lg">${{ "{:,.0f}".format(facturas | sum(attribute='total')) }}</td>
           </tr>
         </tfoot>
       </table>
