@@ -3,29 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CERARTE</title>
+  <title>Cerarte — Cerámica y Decoración</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    .nav-btn { @apply px-6 py-2 rounded-lg transition flex items-center gap-2; }
-    .nav-btn:hover { @apply bg-amber-600; }
-    .nav-btn.active { @apply bg-white text-amber-800 font-semibold; }
+    .nav-btn { @apply px-5 py-2 rounded-lg transition flex items-center gap-2 text-sm font-medium; }
+    .nav-btn:hover { @apply bg-amber-800 bg-opacity-60; }
+    .nav-btn.active { @apply bg-white text-amber-900 font-semibold shadow; }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100">
 
   <!-- NAVBAR -->
-  <nav class="bg-gradient-to-r from-amber-700 to-orange-700 text-white shadow-lg">
-    <div class="px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-mug-hot text-3xl"></i>
-        <h1 class="text-2xl font-bold">Cerarte</h1>
-      </div>
+  <nav class="bg-gradient-to-r from-amber-900 to-amber-700 text-white shadow-lg">
+    <div class="px-6 py-2 flex items-center justify-between">
+
+      <!-- LOGO -->
+      <a href="/dashboard" class="flex items-center">
+        <img src="/static/img/logo_cerarte.png"
+             alt="Cerarte"
+             class="h-16 w-auto object-contain drop-shadow-md"
+             style="filter: brightness(0) invert(1);">
+      </a>
+
+      <!-- MENÚ -->
       <div class="flex gap-4">
-        <a href="/dashboard"   class="nav-btn {% if page=='dashboard'   %}active{% endif %}"><i class="fas fa-chart-line"></i> Dashboard</a>
-        <a href="/facturacion" class="nav-btn {% if page=='facturacion' %}active{% endif %}"><i class="fas fa-receipt"></i> Facturación</a>
-        <a href="/inventario"  class="nav-btn {% if page=='inventario'  %}active{% endif %}"><i class="fas fa-box-open"></i> Inventario</a>
-        <a href="/reportes"    class="nav-btn {% if page=='reportes'    %}active{% endif %}"><i class="fas fa-file-alt"></i> Reportes</a>
+        <a href="/dashboard"   class="nav-btn {% if page=='dashboard'   %}active{% endif %}">
+          <i class="fas fa-chart-line"></i> Dashboard
+        </a>
+        <a href="/facturacion" class="nav-btn {% if page=='facturacion' %}active{% endif %}">
+          <i class="fas fa-receipt"></i> Facturación
+        </a>
+        <a href="/inventario"  class="nav-btn {% if page=='inventario'  %}active{% endif %}">
+          <i class="fas fa-box-open"></i> Inventario
+        </a>
+        <a href="/reportes"    class="nav-btn {% if page=='reportes'    %}active{% endif %}">
+          <i class="fas fa-file-alt"></i> Reportes
+        </a>
       </div>
     </div>
   </nav>
@@ -43,7 +57,7 @@
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className = `fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg text-white font-semibold shadow-lg ${ok?'bg-green-600':'bg-red-600'}`;
-      setTimeout(()=>{ t.className = t.className + ' hidden'; }, 3000);
+      setTimeout(()=>{ t.className = t.className + ' hidden'; }, 3500);
     }
   </script>
 
