@@ -16,7 +16,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'ceramicas.db')
 AMBER_DARK  = colors.HexColor('#78350f')
 AMBER       = colors.HexColor('#b45309')
 AMBER_MED   = colors.HexColor('#d97706')
-AMBER_THEAD = colors.HexColor('#92400e')
+AMBER_THEAD = colors.HexColor('#78350f')
 GRAY_LITE   = colors.HexColor('#f3f4f6')
 GRAY_BORDER = colors.HexColor('#d1d5db')
 WHITE       = colors.white
@@ -52,6 +52,9 @@ def generar_pdf_factura(factura, items):
     story = []; W = 17.6*cm
     story.append(Spacer(1, 0.3*cm))
     story.append(P("FACTURA DE VENTA", titulo_s))
+    story.append(Spacer(1, 0.15*cm))
+    story.append(Spacer(1, 0.15*cm))
+    story.append(Spacer(1, 0.15*cm))
     story.append(Spacer(1, 0.15*cm))
     story.append(Spacer(1, 0.15*cm))
     story.append(Spacer(1, 0.15*cm))
